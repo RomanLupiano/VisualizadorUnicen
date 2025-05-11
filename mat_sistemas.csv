@@ -1,0 +1,38 @@
+cod,nombre,cuatrimestre,correlativa,anio
+6111,Introducción a la Programación I,1,,1
+6112,Introducción al Álgebra,1,,1
+6113,Introducción a los Sistemas Informáticos,1,,1
+6114,Inglés,1,,1
+6121,Diseño Lógico,2,"6112;6113",1
+6122,Introducción a la Programación II,2,"6111",1
+6123,Lenguajes formales y autómatas,2,"6111",1
+6124,Cálculo I,2,,1
+6211,Arquitectura de Computadoras I,1,"6121",2
+6212,Análisis y Diseño de Algoritmos I,1,"6122;6124;6112",2
+6213,Programación Orientada a Objetos,1,"6122",2
+6214,Álgebra Lineal,1,"6112",2
+6221,Redes de Computadoras I,2,"6122;6113",2
+6222,Metodologías de Desarrollo de Software,2,"6213",2
+6223,Análisis y Diseño de Algoritmos II,2,"6212",2
+6224,Cálculo II,2,"6124",2
+6311,Sistemas Operativos,1,"6223;6211",3
+6312,Base de Datos I,1,"6212",3
+6313,Física I,1,"6124;6214",3
+6314,Lenguajes y Paradigmas,1,"6211;6123",3
+6321,Programación Web,2,"6311;6312;6222",3
+6322,Bases de Datos II,2,"6312;6223",3
+6323,Probabilidad y Estadística,2,"6124",3
+6324,Ingeniería de Software I,2,"6222",3
+6411,Organización y Gestión Empresarial,1,"6323;6222",4
+6412,Teoría de la Información,1,"6323;6214",4
+6413,Redes de Computadoras II,1,"6221",4
+6414,Física II,1,"6313;6224",4
+6421,Calidad de Software,2,"6324",4
+6422,Arquitectura de Computadoras II,2,"6211",4
+6423,Fundamentos de la Ciencia de Datos,2,"6323;6312;6214",4
+6424,Compiladores e Intérpretes,2,"6314",4
+6511,Ingeniería de Software II,1,"6421",5
+6512,Ciberseguridad,1,"6323;6223;6221",5
+6513,Inteligencia Artificial,1,"6423;6223",5
+6521,Formulación y Evaluación de Proyectos TICs,2,"6411",5
+6522,Ética y Legislación de la práctica profesional,2,"6411",5

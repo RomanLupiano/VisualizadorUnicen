@@ -290,28 +290,71 @@ function buscarSiguientesMaterias(user, materias){
     })
 }
 
-siguientes = buscarSiguientesMaterias(user, materias)
-for (let i = 1; i <= 10; i++) {
-    if (user.length == materias.length) break;
-    for (let j = 0; j < 2; j++) {
-        console.log("En el año: " + (2024+i) + " Cuatrimestre: " + CUATRIMESTRE_ACTUAL+ ". El alumno tiene aprobadas: ")
-        console.log(user)
+function generarCheckboxes() {
+    const contenedor = document.getElementById("seleccionMaterias");
+    materias.forEach(materia => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "materia_" + materia.cod;
+        checkbox.value = materia.cod;
+        checkbox.className = "materia-checkbox";
 
-        console.log("En el año: " + (2024+i) + " Cuatrimestre: " + CUATRIMESTRE_ACTUAL+ ". Tiene que hacer las materias: ")
-        siguientesMaterias = buscarSiguientesMaterias(user, materias)
-        siguientesMaterias.forEach(materia => {
-            console.log(materia.nombre);
-        });
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.innerText = materia.nombre;
 
+        const div = document.createElement("div");
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        contenedor.appendChild(div);
+    });
+}
 
-            
-        user.push(...siguientesMaterias.map(materia => materia.cod));
+function buscarSiguientesMaterias(user, materias, cuatrimestreActual) {
+    return materias.filter(materia => {
+        if (user.includes(materia.cod)) return false;
+        if (materia.cuatrimestre != cuatrimestreActual) return false;
+        return materia.correlativa.every(c => user.includes(c));
+    });
+}
 
-        if (CUATRIMESTRE_ACTUAL == 1) 
-            CUATRIMESTRE_ACTUAL = 2;
-        else
-            CUATRIMESTRE_ACTUAL = 1;
+function simularTrayectoria() {
+    const seleccionados = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+        .map(cb => parseInt(cb.value));
 
-        console.log("-------");  
+    let user = [...seleccionados];
+    let CUATRIMESTRE_ACTUAL = 1;
+
+    const resultado = document.getElementById("resultado");
+    resultado.innerHTML = "";
+
+    for (let anio = 1; anio <= 10; anio++) {
+        for (let semestre = 0; semestre < 2; semestre++) {
+            if (user.length === materias.length) return;
+
+            const siguientes = buscarSiguientesMaterias(user, materias, CUATRIMESTRE_ACTUAL);
+            if (siguientes.length === 0) {
+                CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
+                continue;
+            }
+
+            const div = document.createElement("div");
+            div.className = "cuatrimestre";
+            div.innerHTML = `<h3>Año ${2024 + anio} - Cuatrimestre ${CUATRIMESTRE_ACTUAL}</h3>`;
+            const ul = document.createElement("ul");
+            siguientes.forEach(m => {
+                const li = document.createElement("li");
+                li.innerText = m.nombre;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+            resultado.appendChild(div);
+
+            user.push(...siguientes.map(m => m.cod));
+            CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
+        }
     }
 }
+
+// Ejecutar al cargar
+window.onload = generarCheckboxes;

@@ -260,8 +260,6 @@ var materias = [
     }
 ];
 
-CUATRIMESTRE_ACTUAL = 1
-
 roman = [
     6111, 6112, 6113, 6114, 6121,
     6122, 6123, 6124, 6212,
@@ -269,29 +267,43 @@ roman = [
     6312, 6313, 6322, 6323,
     6413
 ]
-user = roman
 
-
-function buscarSiguientesMaterias(user, materias){
-    return materias.filter(function(materia) {
-        if (user.includes(materia.cod)) return false; // Si ya tengo la materia
-        if (materia.cuatrimestre != CUATRIMESTRE_ACTUAL) return false; // Si la materia no se da en el cuatrimestre
-
-
-        if (materia.correlativa.length === 0) {
-            return true
-        }
-        for (let i = 0; i < materia.correlativa.length; i++) {
-            if (!(user.includes(materia.correlativa[i]))) 
-                return false;               
-        }
-
-        return true;
-    })
+function buscarSiguientesMaterias(materiasAprobadas, materias, cuatrimestreActual) {
+    return materias.filter(materia => {
+        if (materiasAprobadas.includes(materia.cod)) return false;
+        if (materia.cuatrimestre != cuatrimestreActual) return false;
+        return materia.correlativa.every(correlativa => materiasAprobadas.includes(correlativa));
+    });
 }
+
+function actualizarCorrelativas(codMateria, marcado) {
+    const datosMateria = materias.find(mat => mat.cod === parseInt(codMateria));
+
+    if (marcado) {
+        datosMateria.correlativa.forEach(codCorrelativa => {
+            const checkbox = document.querySelector(`input[type="checkbox"][value="${codCorrelativa}"]`);
+            if (checkbox && !checkbox.checked) {
+                checkbox.checked = true;
+                actualizarCorrelativas(codCorrelativa, true);
+            }
+        });
+    } else {
+        materias.forEach(materia => {
+            if (materia.correlativa.includes(datosMateria.cod)) {
+                const checkbox = document.querySelector(`input[type="checkbox"][value="${materia.cod}"]`);
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                    actualizarCorrelativas(materia.cod, false);
+                }
+            }
+        });
+    }
+}
+
 
 function generarCheckboxes() {
     const contenedor = document.getElementById("seleccionMaterias");
+
     materias.forEach(materia => {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -299,41 +311,45 @@ function generarCheckboxes() {
         checkbox.value = materia.cod;
         checkbox.className = "materia-checkbox";
 
+        checkbox.addEventListener("change", function () { 
+            actualizarCorrelativas(this.value, this.checked);
+        });
+
+
         const label = document.createElement("label");
         label.htmlFor = checkbox.id;
         label.innerText = materia.nombre;
 
+        
+
         const div = document.createElement("div");
+
         div.appendChild(checkbox);
         div.appendChild(label);
+        
         contenedor.appendChild(div);
     });
 }
 
-function buscarSiguientesMaterias(user, materias, cuatrimestreActual) {
-    return materias.filter(materia => {
-        if (user.includes(materia.cod)) return false;
-        if (materia.cuatrimestre != cuatrimestreActual) return false;
-        return materia.correlativa.every(c => user.includes(c));
-    });
-}
+
 
 function simularTrayectoria() {
     const seleccionados = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
         .map(cb => parseInt(cb.value));
 
-    let user = [...seleccionados];
+    let materiasAprobadas = [...seleccionados];
     let CUATRIMESTRE_ACTUAL = 1;
 
     const resultado = document.getElementById("resultado");
-    resultado.innerHTML = "";
+    resultado.innerHTML = "";  // Limpiar trayectorias anteriores
 
     for (let anio = 1; anio <= 10; anio++) {
         for (let semestre = 0; semestre < 2; semestre++) {
-            if (user.length === materias.length) return;
+            if (materiasAprobadas.length === materias.length) return;
 
-            const siguientes = buscarSiguientesMaterias(user, materias, CUATRIMESTRE_ACTUAL);
-            if (siguientes.length === 0) {
+            const siguientes = buscarSiguientesMaterias(materiasAprobadas, materias, CUATRIMESTRE_ACTUAL);
+
+            if (siguientes.length === 0) {    // Puedo no dar materias en este cuatrimestre pero sí dar materias en el próximo
                 CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
                 continue;
             }
@@ -341,20 +357,24 @@ function simularTrayectoria() {
             const div = document.createElement("div");
             div.className = "cuatrimestre";
             div.innerHTML = `<h3>Año ${2024 + anio} - Cuatrimestre ${CUATRIMESTRE_ACTUAL}</h3>`;
+
             const ul = document.createElement("ul");
-            siguientes.forEach(m => {
+
+            siguientes.forEach(materia => {
                 const li = document.createElement("li");
-                li.innerText = m.nombre;
+                li.innerText = materia.nombre;
                 ul.appendChild(li);
             });
+
             div.appendChild(ul);
             resultado.appendChild(div);
 
-            user.push(...siguientes.map(m => m.cod));
+            // Agregar materias como aprobadas para el siguiente cuatrimestre
+            materiasAprobadas.push(...siguientes.map(materia => materia.cod));
             CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
         }
     }
 }
 
-// Ejecutar al cargar
+// Al cargar las páginas que genere las materias para seleccionar
 window.onload = generarCheckboxes;

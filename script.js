@@ -260,18 +260,11 @@ var materias = [
     }
 ];
 
-roman = [
-    6111, 6112, 6113, 6114, 6121,
-    6122, 6123, 6124, 6212,
-    6213, 6221, 6222, 6223, 
-    6312, 6313, 6322, 6323,
-    6413
-]
-
-function buscarSiguientesMaterias(materiasAprobadas, materias, cuatrimestreActual) {
+function buscarSiguientesMaterias(materiasAprobadas, materias, cuatrimestreActual, anio) {
     return materias.filter(materia => {
         if (materiasAprobadas.includes(materia.cod)) return false;
         if (materia.cuatrimestre != cuatrimestreActual) return false;
+        if (materia.anio == 5 && anio == 2025) return false;    // Regla por el reciente cambio de plan de estudios
         return materia.correlativa.every(correlativa => materiasAprobadas.includes(correlativa));
     });
 }
@@ -343,11 +336,14 @@ function simularTrayectoria() {
     const resultado = document.getElementById("resultado");
     resultado.innerHTML = "";  // Limpiar trayectorias anteriores
 
-    for (let anio = 1; anio <= 10; anio++) {
+    anioActual = new Date().getFullYear();
+
+    for (let anio = anioActual; anio <= anioActual + 10; anio++) {
+        console.log(anio);
         for (let semestre = 0; semestre < 2; semestre++) {
             if (materiasAprobadas.length === materias.length) return;
 
-            const siguientes = buscarSiguientesMaterias(materiasAprobadas, materias, CUATRIMESTRE_ACTUAL);
+            const siguientes = buscarSiguientesMaterias(materiasAprobadas, materias, CUATRIMESTRE_ACTUAL, anio);
 
             if (siguientes.length === 0) {    // Puedo no dar materias en este cuatrimestre pero sí dar materias en el próximo
                 CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
@@ -356,7 +352,7 @@ function simularTrayectoria() {
 
             const div = document.createElement("div");
             div.className = "cuatrimestre";
-            div.innerHTML = `<h3>Año ${2024 + anio} - Cuatrimestre ${CUATRIMESTRE_ACTUAL}</h3>`;
+            div.innerHTML = `<h3>Año ${anio} - Cuatrimestre ${CUATRIMESTRE_ACTUAL}</h3>`;
 
             const ul = document.createElement("ul");
 

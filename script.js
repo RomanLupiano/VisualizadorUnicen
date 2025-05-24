@@ -313,7 +313,6 @@ function generarCheckboxes() {
         label.htmlFor = checkbox.id;
         label.innerText = materia.nombre;
 
-        
 
         const div = document.createElement("div");
 
@@ -324,7 +323,17 @@ function generarCheckboxes() {
     });
 }
 
+function formatoAnio(anio){
+    const formato = {
+        1: "1ro",
+        2: "2do",
+        3: "3ro",
+        4: "4to",
+        5: "5to"
+    };
 
+    return formato[anio];
+}
 
 function simularTrayectoria() {
     const seleccionados = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
@@ -339,7 +348,6 @@ function simularTrayectoria() {
     anioActual = new Date().getFullYear();
 
     for (let anio = anioActual; anio <= anioActual + 10; anio++) {
-        console.log(anio);
         for (let semestre = 0; semestre < 2; semestre++) {
             if (materiasAprobadas.length === materias.length) return;
 
@@ -352,14 +360,32 @@ function simularTrayectoria() {
 
             const div = document.createElement("div");
             div.className = "cuatrimestre";
-            div.innerHTML = `<h3>Año ${anio} - Cuatrimestre ${CUATRIMESTRE_ACTUAL}</h3>`;
+            div.innerHTML = "<h3>Año " + anio + " - Cuatrimestre " + CUATRIMESTRE_ACTUAL + "</h3>";
 
             const ul = document.createElement("ul");
 
             siguientes.forEach(materia => {
-                const li = document.createElement("li");
-                li.innerText = materia.nombre;
-                ul.appendChild(li);
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = "materia_" + materia.cod + "_simulada";
+                checkbox.value = materia.cod;
+                checkbox.className = "materia-simulada-checkbox";
+                checkbox.checked = true;
+
+                checkbox.addEventListener("change", function () { 
+                    recalcularTrayectoria(this.value, this.checked);
+                });
+
+                const label = document.createElement("label");
+                label.htmlFor = checkbox.id;
+                label.innerText = materia.nombre + " (" + formatoAnio(materia.anio) + " - " + materia.cuatrimestre + "C)";
+
+                const div = document.createElement("div");
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                
+                ul.appendChild(div);
             });
 
             div.appendChild(ul);
@@ -370,6 +396,10 @@ function simularTrayectoria() {
             CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
         }
     }
+}
+
+function recalcularTrayectoria(codMateria, marcado){
+    console.log(codMateria, marcado);
 }
 
 // Al cargar las páginas que genere las materias para seleccionar

@@ -260,6 +260,10 @@ var materias = [
     }
 ];
 
+var trayectoria = Array();
+let materiasNoCurso = Array();
+
+
 function buscarSiguientesMaterias(materiasAprobadas, materias, cuatrimestreActual, anio) {
     return materias.filter(materia => {
         if (materiasAprobadas.includes(materia.cod)) return false;
@@ -336,22 +340,26 @@ function formatoAnio(anio){
 }
 
 function simularTrayectoria() {
-    const seleccionados = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-        .map(cb => parseInt(cb.value));
-
-    let materiasAprobadas = [...seleccionados];
-    let CUATRIMESTRE_ACTUAL = 1;
-
     const resultado = document.getElementById("resultado");
-    resultado.innerHTML = "";  // Limpiar trayectorias anteriores
+    resultado.innerHTML = "";  
+    trayectoria = Array(); // Limpiar trayectorias anteriores
+
+    let estaTrayectoriaNoCurso = materiasNoCurso;
+    
+    const seleccionados = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+        .filter(cb => !cb.id.endsWith("simulada")).map(cb => parseInt(cb.value));
+
+    trayectoria[0] = [...seleccionados];
+    let CUATRIMESTRE_ACTUAL = 1;
 
     anioActual = new Date().getFullYear();
 
     for (let anio = anioActual; anio <= anioActual + 10; anio++) {
         for (let semestre = 0; semestre < 2; semestre++) {
-            if (materiasAprobadas.length === materias.length) return;
+            if (trayectoria[trayectoria.length - 1].length === materias.length) return;
 
-            const siguientes = buscarSiguientesMaterias(materiasAprobadas, materias, CUATRIMESTRE_ACTUAL, anio);
+
+            const siguientes = buscarSiguientesMaterias(trayectoria[trayectoria.length - 1], materias, CUATRIMESTRE_ACTUAL, anio);
 
             if (siguientes.length === 0) {    // Puedo no dar materias en este cuatrimestre pero sí dar materias en el próximo
                 CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
@@ -372,6 +380,9 @@ function simularTrayectoria() {
                 checkbox.className = "materia-simulada-checkbox";
                 checkbox.checked = true;
 
+                const estaSeleccionada = !estaTrayectoriaNoCurso.includes(materia.cod);
+                checkbox.checked = estaSeleccionada;
+
                 checkbox.addEventListener("change", function () { 
                     recalcularTrayectoria(this.value, this.checked);
                 });
@@ -391,15 +402,54 @@ function simularTrayectoria() {
             div.appendChild(ul);
             resultado.appendChild(div);
 
+            const codigosSiguientes = siguientes.map(materia => materia.cod);
+
             // Agregar materias como aprobadas para el siguiente cuatrimestre
-            materiasAprobadas.push(...siguientes.map(materia => materia.cod));
+            const aprobadas = codigosSiguientes
+                .filter(materia => !estaTrayectoriaNoCurso.includes(materia))
+                .concat(trayectoria[trayectoria.length - 1]);
+
+            trayectoria.push(aprobadas);
+
+            estaTrayectoriaNoCurso = consumirCursadas(estaTrayectoriaNoCurso, codigosSiguientes);
+
             CUATRIMESTRE_ACTUAL = CUATRIMESTRE_ACTUAL === 1 ? 2 : 1;
         }
     }
 }
 
+function consumirCursadas(listaOriginal, materiasAEliminar) {
+    // Creamos una copia para no modificar la original directamente
+    let copiaLista = [...listaOriginal];
+
+    for (let i = 0; i < materiasAEliminar.length; i++) {
+        let cod = materiasAEliminar[i];
+
+        let indice = copiaLista.indexOf(cod);
+        if (indice !== -1) {
+            copiaLista.splice(indice, 1); 
+        }
+    }
+
+    return copiaLista;
+}
+
+
 function recalcularTrayectoria(codMateria, marcado){
-    console.log(codMateria, marcado);
+    codMateria = parseInt(codMateria);
+
+    if (!marcado) {
+        materiasNoCurso.push(codMateria); // Si no la curso la agrego
+    } else {
+        materiasNoCurso = materiasNoCurso.filter(mat => codMateria !== mat);
+    }
+
+    console.log(materiasNoCurso);
+    
+    const resultado = document.getElementById("resultado");
+    resultado.innerHTML = "";
+
+    simularTrayectoria();
 }
 
 // Al cargar las páginas que genere las materias para seleccionar
